@@ -1,86 +1,77 @@
-from contextlib import asynccontextmanager
+import enum
 
 import databases
 import sqlalchemy
-from fastapi import FastAPI
-from starlette.requests import Request
-
 from decouple import config
+from fastapi import FastAPI
 
-DATABASE_URL = (
-    f'postgresql://{config("DB_USER")}:'
-    f'{config("DB_PASSWORD")}@'
-    f'{config("DB_HOST")}:'
-    f'{config("DB_PORT")}/'
-    f'{config("DB_NAME")}'
-)
-
+DATABASE_URL = f"postgresql://{config('DB_USER')}:{config('DB_PASSWORD')}@localhost:5432/store"
 
 database = databases.Database(DATABASE_URL)
+
 metadata = sqlalchemy.MetaData()
 
-books = sqlalchemy.Table(
-    "books",
+users = sqlalchemy.Table(
+    "users",
     metadata,
-    sqlalchemy.Column("id", sqlalchemy.INTEGER, primary_key=True),
-    sqlalchemy.Column('title', sqlalchemy.String),
-    sqlalchemy.Column('author', sqlalchemy.String),
-    sqlalchemy.Column('pages', sqlalchemy.INTEGER),
-    sqlalchemy.Column('reader_id', sqlalchemy.ForeignKey('readers.id'), index=True),
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("email", sqlalchemy.String(120), unique=True),
+    sqlalchemy.Column("password", sqlalchemy.String(255)),
+    sqlalchemy.Column("full_name", sqlalchemy.String(200)),
+    sqlalchemy.Column("phone", sqlalchemy.String(13)),
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now()),
+    sqlalchemy.Column(
+        "last_modified_at",
+        sqlalchemy.DateTime,
+        nullable=False,
+        server_default=sqlalchemy.func.now(),
+        onupdate=sqlalchemy.func.now(),
+    ),
 )
 
-readers = sqlalchemy.Table(
-    "readers",
+
+class ColorEnum(enum.Enum):
+    pink = "pink"
+    black = "black"
+    white = "white"
+    yellow = "yellow"
+
+
+class SizeEnum(enum.Enum):
+    xs = "xs"
+    s = "s"
+    m = "m"
+    l = "l"
+    xl = "xl"
+    xxl = "xxl"
+
+
+clothes = sqlalchemy.Table(
+    "clothes",
     metadata,
-    sqlalchemy.Column("id", sqlalchemy.INTEGER, primary_key=True),
-    sqlalchemy.Column('first_name', sqlalchemy.String),
-    sqlalchemy.Column('last_name', sqlalchemy.String),
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("name", sqlalchemy.String(120)),
+    sqlalchemy.Column("color", sqlalchemy.Enum(ColorEnum), nullable=False),
+    sqlalchemy.Column("size", sqlalchemy.Enum(SizeEnum), nullable=False),
+    sqlalchemy.Column("photo_url", sqlalchemy.String(255)),
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now()),
+    sqlalchemy.Column(
+        "last_modified_at",
+        sqlalchemy.DateTime,
+        nullable=False,
+        server_default=sqlalchemy.func.now(),
+        onupdate=sqlalchemy.func.now(),
+    ),
 )
 
+app = FastAPI()
 
-readers_books = sqlalchemy.Table(
-    "readers_books",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.INTEGER, primary_key=True),
-    sqlalchemy.Column('book_id', sqlalchemy.ForeignKey('books.id'), nullable=False),
-    sqlalchemy.Column('reader_id', sqlalchemy.ForeignKey('readers.id'), nullable=False),
-)
 
-#app = FastAPI()
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+@app.on_event("startup")
+async def startup():
     await database.connect()
-    print("Application is starting")
-    yield
+
+
+@app.on_event("shutdown")
+async def shutdown():
     await database.disconnect()
-    print("Application is shutting down")
-
-app = FastAPI(lifespan=lifespan)
-
-@app.get('/books/')
-async def get_all_books():
-    query = books.select()
-    return await database.fetch_all(query)
-
-@app.post('/books/')
-async def create_book(request: Request):
-    data = await request.json()
-    query = books.insert().values(**data)
-    last_record_id = await database.execute(query)
-    return {'id': last_record_id}
-
-
-@app.post('/readers/')
-async def create_reader(request: Request):
-    data = await request.json()
-    query = readers.insert().values(**data)
-    last_record_id = await database.execute(query)
-    return {'id': last_record_id}
-
-@app.post('/readers_books/')
-async def create_readers_books(request: Request):
-    data = await request.json()
-    query = readers_books.insert().values(**data)
-    last_record_id = await database.execute(query)
-    return {'id': last_record_id}
