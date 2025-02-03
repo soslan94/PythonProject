@@ -4,6 +4,7 @@ import databases
 import sqlalchemy
 from decouple import config
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 DATABASE_URL = f"postgresql://{config('DB_USER')}:{config('DB_PASSWORD')}@localhost:5432/store"
 
@@ -64,6 +65,15 @@ clothes = sqlalchemy.Table(
     ),
 )
 
+
+class BaseUser(BaseModel):
+    email: str
+    full_name: str
+
+class UserSignIn(BaseUser):
+    password: str
+
+
 app = FastAPI()
 
 
@@ -75,3 +85,9 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await database.disconnect()
+
+@app.post('/register/')
+async def create_user(user: UserSignIn):
+    q = users.insert().values(**user.dict())
+    id_ = await database.execute(q)
+    return
