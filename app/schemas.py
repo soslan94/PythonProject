@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, validator, EmailStr
-from email_validator import validate_email, EmailNotValidError
+#from email_validator import validate_email, EmailNotValidError
 
 # class EmailField(str):
 #     @classmethod
