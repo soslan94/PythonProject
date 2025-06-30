@@ -9,3 +9,7 @@ def test_users():
         response = client.get("/users/users/")
         assert response.status_code == 200
 
+def test_user():
+    with TestClient(app) as client:
+        response = client.get("/users/users/1")
+        assert response.status_code == 200
