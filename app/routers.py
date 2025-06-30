@@ -20,7 +20,7 @@ async def users_get():
     except Exception as e:
         raise HTTPException(status_code=500, detail="Could not fetch users")
 
-@router.get("/register/{id}/", response_model=UserResponse)
+@router.get("/users/{id}/", response_model=UserResponse)
 async def user_get(id: int):
     try:
         return await crud.get_user(id)
