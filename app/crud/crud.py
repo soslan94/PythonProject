@@ -1,9 +1,9 @@
 from typing import List
 
-from .db import database
-from .security import pwd_context
-from .models import users
-from .schemas import UserCreate, UserResponse
+from app.db import database
+from app.security import pwd_context
+from app.models import users
+from app.schemas import UserCreate, UserResponse
 
 
 async def create_user(user: UserCreate) -> UserResponse:
