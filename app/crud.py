@@ -1,11 +1,13 @@
 from typing import List
 
 from .db import database
+from .security import pwd_context
 from .models import users
 from .schemas import UserCreate, UserResponse
 
 
 async def create_user(user: UserCreate) -> UserResponse:
+    user.password = pwd_context.hash(user.password)
     q = users.insert().values(**user.dict())
     new_id = await database.execute(q)
     row = await database.fetch_one(users.select().where(users.c.id == new_id))
