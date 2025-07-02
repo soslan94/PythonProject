@@ -1,8 +1,6 @@
 import logging
-
 from fastapi import FastAPI
 from dotenv import load_dotenv
-
 from app.db import database
 from app.bot import BASE_URL, WEBHOOK_URL, client
 from app.routers import router
