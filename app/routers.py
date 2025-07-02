@@ -1,9 +1,10 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 import app.crud.crud
-from .schemas import UserResponse, UserCreate
+from app.middleware.jwt_based_auth import oauth2_scheme
+from app.schemas.user_schemas import UserResponse, UserCreate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -14,7 +15,7 @@ async def register(user: UserCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/users/", response_model=List[UserResponse])
+@router.get("/users/", response_model=List[UserResponse], dependencies=[Depends(oauth2_scheme)])
 async def users_get():
     try:
         return await app.crud.crud.get_users()
@@ -27,3 +28,4 @@ async def user_get(id: int):
         return await app.crud.crud.get_user(id)
     except Exception as e:
         raise HTTPException(status_code=404, detail='user does not exist')
+

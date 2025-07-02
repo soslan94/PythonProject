@@ -1,6 +1,6 @@
 import databases
 import sqlalchemy
-from .config import settings
+from app.config.config import settings
 
 DATABASE_URL = settings.db_url
 
