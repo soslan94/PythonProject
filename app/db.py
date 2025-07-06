@@ -1,8 +1,8 @@
 import databases
 import sqlalchemy
-from app.config.config import settings
+from app.settings import settings
 
-DATABASE_URL = settings.db_url
+DATABASE_URL = settings.POSTGRES.db_url
 
 database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()
