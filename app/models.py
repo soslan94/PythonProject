@@ -1,6 +1,8 @@
 import enum
 import sqlalchemy
 from .db import metadata
+from .schemas.user_roles_schemes import UserRole
+
 
 class ColorEnum(enum.Enum):
     pink = "pink"
@@ -28,6 +30,7 @@ users = sqlalchemy.Table(
         "last_modified_at", sqlalchemy.DateTime,
         nullable=False, server_default=sqlalchemy.func.now(), onupdate=sqlalchemy.func.now()
     ),
+    sqlalchemy.Column('role', sqlalchemy.Enum(UserRole), nullable=False, server_default=UserRole.user.name)
 )
 
 clothes = sqlalchemy.Table(
